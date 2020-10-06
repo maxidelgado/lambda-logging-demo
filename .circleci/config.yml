@@ -54,7 +54,7 @@ jobs:
       - run:
           name: Deploy application
           command: |
-            serverless deploy --verbose -s $STAGE
+            serverless deploy
 
 workflows:
   version: 2
