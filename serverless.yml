@@ -6,20 +6,20 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs8.10
-  stage: dev
+  runtime: go1.x
   region: us-east-1
+  memorySize: 128
+  stage: dev
   versionFunctions: false
-  
+
 functions:
-  ship-logs-to-logzio:
-    handler: functions/ship-logs/handler.handler
+  worker:
+    handler: bin/worker
     description: Sends CloudWatch logs to Logz.io
-    memorySize: 128
     environment:
       logstash_host: listener.logz.io
       logstash_port: 5015
-      token: rBrdvFgguTSCLHhFfLDmyuGTQZhDYyZt
+      token: palOPqZOzEnDKhrVYZvgEmZzJqWRaVdp
 
 resources:
   Resources:
