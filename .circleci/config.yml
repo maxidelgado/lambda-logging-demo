@@ -42,6 +42,7 @@ jobs:
           name: Install Serverless CLI and dependencies
           command: |
             sudo npm i -g serverless
+            npm install --save-dev serverless-iam-roles-per-function
             npm install
       - save_cache:
           paths:
