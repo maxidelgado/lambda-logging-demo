@@ -41,6 +41,7 @@ jobs:
       - run:
           name: Install Serverless CLI and dependencies
           command: |
+            sudo npm i -g serverless
             npm install
       - save_cache:
           paths:
@@ -52,7 +53,7 @@ jobs:
       - run:
           name: Deploy application
           command: |
-            'node_modules/.bin/sls' deploy --verbose -s $STAGE
+            serverless deploy --verbose -s $STAGE
 
 workflows:
   version: 2

@@ -1,7 +1,6 @@
 service: cloudwatch-logs
 
 plugins:
- - serverless-pseudo-parameters
  - serverless-iam-roles-per-function
 
 provider:
