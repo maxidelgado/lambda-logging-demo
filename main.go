@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	host  = os.Getenv("logstash_host")
-	port  = os.Getenv("logstash_port")
-	token = os.Getenv("token")
+	host  = os.Getenv("HOST")
+	port  = os.Getenv("PORT")
+	token = os.Getenv("TOKEN")
 )
 
 func main() {

@@ -16,9 +16,9 @@ functions:
     handler: bin/worker
     description: Sends CloudWatch logs to Logz.io
     environment:
-      logstash_host: listener.logz.io
-      logstash_port: 5015
-      token: palOPqZOzEnDKhrVYZvgEmZzJqWRaVdp
+      HOST: listener.logz.io
+      PORT: 5015
+      TOKEN: palOPqZOzEnDKhrVYZvgEmZzJqWRaVdp
 
 resources:
   Resources:
