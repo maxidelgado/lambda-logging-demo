@@ -1,13 +1,13 @@
 package main
 
 import (
-	"net"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/go-resty/resty/v2"
 	json "github.com/json-iterator/go"
 )
 
@@ -27,11 +27,10 @@ func handle(event events.CloudwatchLogsData) error {
 
 func processAll(group, stream string, logs []events.CloudwatchLogsLogEvent) error {
 	addr := host + ":" + port
-	conn, err := net.Dial("tcp", addr)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
+
+	client := resty.New()
+	req := client.R().
+		SetQueryParam("token", token)
 
 	for _, log := range logs {
 		raw := logMessage(group, stream, log)
@@ -39,7 +38,8 @@ func processAll(group, stream string, logs []events.CloudwatchLogsLogEvent) erro
 			continue
 		}
 
-		if _, err := conn.Write(raw); err != nil {
+		_, err := req.SetBody(raw).Post(addr)
+		if err != nil {
 			return err
 		}
 	}
