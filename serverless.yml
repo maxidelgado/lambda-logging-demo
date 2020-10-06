@@ -19,5 +19,5 @@ functions:
     description: Sends CloudWatch logs to Logz.io
     environment:
       HOST: listener.logz.io
-      PORT: 5015
+      PORT: 5050
       TOKEN: palOPqZOzEnDKhrVYZvgEmZzJqWRaVdp
