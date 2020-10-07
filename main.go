@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -22,15 +21,13 @@ func main() {
 	lambda.Start(handle)
 }
 
-func handle(event map[string]interface{}) error {
-	fmt.Printf("event: %v", event)
-	/*
-		if err := processAll(event.LogGroup, event.LogStream, event.LogEvents); err != nil {
-			fmt.Printf("error: %v", err.Error())
-			return err
-		}
-	*/
-	return nil
+func handle(event events.CloudwatchLogsRawData) error {
+	data, err := event.Parse()
+	if err != nil {
+		return err
+	}
+
+	return processAll(data.LogGroup, data.LogStream, data.LogEvents)
 }
 
 func processAll(group, stream string, logs []events.CloudwatchLogsLogEvent) error {
