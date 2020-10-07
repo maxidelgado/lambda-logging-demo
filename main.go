@@ -2,13 +2,13 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/go-resty/resty/v2"
-	json "github.com/json-iterator/go"
 	"go.uber.org/zap"
 )
 
@@ -36,6 +36,7 @@ func handle(event events.CloudwatchLogsEvent) error {
 		return err
 	}
 
+	log.Info("logs synced successfully")
 	return nil
 }
 
@@ -47,46 +48,43 @@ func processAll(group, stream string, logs []events.CloudwatchLogsLogEvent) erro
 		SetQueryParam("token", token)
 
 	for _, log := range logs {
-		raw, _ := logMessage(group, stream, log)
-		if raw == nil {
-			continue
-		}
-
-		_, err := req.SetBody(raw).Post(addr)
+		msg, err := logMessage(group, stream, log)
 		if err != nil {
 			return err
+		}
+
+		resp, err := req.SetBody(msg).Post(addr)
+		if err != nil {
+			return err
+		}
+
+		if resp.IsError() {
+			return fmt.Errorf("response: %v - status: %v", resp.String(), resp.StatusCode())
 		}
 	}
 
 	return nil
 }
 
-func logMessage(group, stream string, event events.CloudwatchLogsLogEvent) ([]byte, error) {
+func logMessage(group, stream string, event events.CloudwatchLogsLogEvent) (logMsg, error) {
 	if strings.Contains(event.Message, "START RequestId") ||
 		strings.Contains(event.Message, "END RequestId") ||
 		strings.Contains(event.Message, "REPORT RequestId") {
-		return nil, errors.New("skipped log: START - END - REPORT")
+		return logMsg{}, errors.New("skipped log: START - END - REPORT")
 	}
 
 	funcName := functionName(group)
 	funcVersion := lambdaVersion(stream)
 
-	msg := logMsg{
+	return logMsg{
 		Stream:        stream,
 		Group:         group,
 		LambdaName:    funcName,
 		Type:          "cloudwatch",
 		Token:         token,
-		Message:       []byte(event.Message),
+		Message:       event.Message,
 		LambdaVersion: funcVersion,
-	}
-
-	raw, err := json.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
-
-	return raw, nil
+	}, nil
 }
 
 func lambdaVersion(stream string) string {
@@ -108,5 +106,5 @@ type logMsg struct {
 	Type          string `json:"type"`
 	Token         string `json:"token"`
 	LambdaVersion string `json:"lambda_version"`
-	Message       []byte `json:"message"`
+	Message       string `json:"message"`
 }
