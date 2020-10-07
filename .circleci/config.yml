@@ -43,6 +43,7 @@ jobs:
           command: |
             sudo npm i -g serverless
             npm install --save-dev serverless-iam-roles-per-function
+            npm install --save-dev serverless-plugin-log-retention
             npm install
       - save_cache:
           paths:

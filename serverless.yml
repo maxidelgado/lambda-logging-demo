@@ -1,5 +1,11 @@
 service: cloudwatch-logs
 
+plugins:
+  - serverless-plugin-log-retention
+
+custom:
+  logRetentionInDays: 7
+
 provider:
   name: aws
   runtime: go1.x
