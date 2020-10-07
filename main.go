@@ -1,20 +1,23 @@
 package main
 
 import (
+	"errors"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/go-resty/resty/v2"
 	json "github.com/json-iterator/go"
+	"go.uber.org/zap"
 )
 
 var (
 	host  = os.Getenv("HOST")
 	port  = os.Getenv("PORT")
 	token = os.Getenv("TOKEN")
+
+	log, _ = zap.NewProduction()
 )
 
 func main() {
@@ -24,10 +27,16 @@ func main() {
 func handle(event events.CloudwatchLogsEvent) error {
 	data, err := event.AWSLogs.Parse()
 	if err != nil {
+		log.Error("processAll()", zap.Error(err))
 		return err
 	}
 
-	return processAll(data.LogGroup, data.LogStream, data.LogEvents)
+	if err := processAll(data.LogGroup, data.LogStream, data.LogEvents); err != nil {
+		log.Error("processAll()", zap.Error(err))
+		return err
+	}
+
+	return nil
 }
 
 func processAll(group, stream string, logs []events.CloudwatchLogsLogEvent) error {
@@ -38,7 +47,7 @@ func processAll(group, stream string, logs []events.CloudwatchLogsLogEvent) erro
 		SetQueryParam("token", token)
 
 	for _, log := range logs {
-		raw := logMessage(group, stream, log)
+		raw, _ := logMessage(group, stream, log)
 		if raw == nil {
 			continue
 		}
@@ -52,20 +61,17 @@ func processAll(group, stream string, logs []events.CloudwatchLogsLogEvent) erro
 	return nil
 }
 
-func logMessage(group, stream string, event events.CloudwatchLogsLogEvent) []byte {
+func logMessage(group, stream string, event events.CloudwatchLogsLogEvent) ([]byte, error) {
 	if strings.Contains(event.Message, "START RequestId") ||
 		strings.Contains(event.Message, "END RequestId") ||
 		strings.Contains(event.Message, "REPORT RequestId") {
-		return nil
+		return nil, errors.New("skipped log: START - END - REPORT")
 	}
 
 	funcName := functionName(group)
-	funcVersion, err := lambdaVersion(stream)
-	if err != nil {
-		return nil
-	}
+	funcVersion := lambdaVersion(stream)
 
-	msg := log{
+	msg := logMsg{
 		Stream:        stream,
 		Group:         group,
 		LambdaName:    funcName,
@@ -77,17 +83,17 @@ func logMessage(group, stream string, event events.CloudwatchLogsLogEvent) []byt
 
 	raw, err := json.Marshal(msg)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	return raw
+	return raw, nil
 }
 
-func lambdaVersion(stream string) (int, error) {
+func lambdaVersion(stream string) string {
 	start := strings.Index(stream, "[")
 	end := strings.Index(stream, "]")
 
-	return strconv.Atoi(stream[start:end])
+	return stream[start+1 : end]
 }
 
 func functionName(group string) string {
@@ -95,12 +101,12 @@ func functionName(group string) string {
 	return arr[len(arr)-1]
 }
 
-type log struct {
+type logMsg struct {
 	Stream        string `json:"stream"`
 	Group         string `json:"group"`
 	LambdaName    string `json:"lambda_name"`
 	Type          string `json:"type"`
 	Token         string `json:"token"`
+	LambdaVersion string `json:"lambda_version"`
 	Message       []byte `json:"message"`
-	LambdaVersion int    `json:"lambda_version"`
 }
