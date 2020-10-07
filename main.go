@@ -22,6 +22,7 @@ func main() {
 }
 
 func handle(event events.CloudwatchLogsData) error {
+	println(event)
 	return processAll(event.LogGroup, event.LogStream, event.LogEvents)
 }
 
