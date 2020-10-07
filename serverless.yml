@@ -1,8 +1,5 @@
 service: cloudwatch-logs
 
-plugins:
-  - serverless-iam-roles-per-function
-
 provider:
   name: aws
   runtime: go1.x
@@ -10,6 +7,11 @@ provider:
   memorySize: 128
   stage: dev
   versionFunctions: false
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource: "*"
 
 functions:
   worker:
@@ -19,15 +21,3 @@ functions:
       HOST: listener.logz.io
       PORT: 8071
       TOKEN: palOPqZOzEnDKhrVYZvgEmZzJqWRaVdp
-
-resources:
-  Resources:
-    LambdaInvokePermission:
-      Type: AWS::Lambda::Permission
-      Properties:
-        Action: lambda:InvokeFunction
-        FunctionName:
-          Fn::Join:
-            - ""
-            - - "Ref" : "ShipDashlogsDashtoDashlogzioLambdaFunction"
-        Principal: logs.#{AWS::Region}.amazonaws.com
