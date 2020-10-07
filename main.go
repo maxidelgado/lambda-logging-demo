@@ -22,10 +22,8 @@ func main() {
 	lambda.Start(handle)
 }
 
-func handle(event []byte) error {
-	var m map[string]interface{}
-	_ = json.Unmarshal(event, &m)
-	fmt.Printf("event: %v", m)
+func handle(event map[string]interface{}) error {
+	fmt.Printf("event: %v", event)
 	/*
 		if err := processAll(event.LogGroup, event.LogStream, event.LogEvents); err != nil {
 			fmt.Printf("error: %v", err.Error())
