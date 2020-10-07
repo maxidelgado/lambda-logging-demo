@@ -21,8 +21,8 @@ func main() {
 	lambda.Start(handle)
 }
 
-func handle(event events.CloudwatchLogsRawData) error {
-	data, err := event.Parse()
+func handle(event events.CloudwatchLogsEvent) error {
+	data, err := event.AWSLogs.Parse()
 	if err != nil {
 		return err
 	}
