@@ -5,7 +5,14 @@ import (
 	"testing"
 )
 
+func init() {
+}
+
 func Test_handle(t *testing.T) {
+	host = "listener.logz.io"
+	port = "8071"
+	token = "palOPqZOzEnDKhrVYZvgEmZzJqWRaVdp"
+
 	type args struct {
 		event events.CloudwatchLogsEvent
 	}

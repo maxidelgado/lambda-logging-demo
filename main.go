@@ -40,7 +40,7 @@ func handle(event events.CloudwatchLogsEvent) error {
 }
 
 func processAll(group, stream string, logs []events.CloudwatchLogsLogEvent) error {
-	addr := host + ":" + port
+	addr := "https://" + host + ":" + port
 
 	client := resty.New()
 	req := client.R().
