@@ -91,7 +91,8 @@ func lambdaVersion(stream string) (int, error) {
 }
 
 func functionName(group string) string {
-	return strings.Split(group, "/")[len(group)-1]
+	arr := strings.Split(group, "/")
+	return arr[len(arr)-1]
 }
 
 type log struct {
