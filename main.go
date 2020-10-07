@@ -23,7 +23,12 @@ func main() {
 
 func handle(event events.CloudwatchLogsData) error {
 	println(event)
-	return processAll(event.LogGroup, event.LogStream, event.LogEvents)
+	if err := processAll(event.LogGroup, event.LogStream, event.LogEvents); err != nil {
+		println(err)
+		return err
+	}
+
+	return nil
 }
 
 func processAll(group, stream string, logs []events.CloudwatchLogsLogEvent) error {
