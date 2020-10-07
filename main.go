@@ -25,6 +25,7 @@ func main() {
 }
 
 func handle(event events.CloudwatchLogsEvent) error {
+	log.Info("raw event", zap.String("data", event.AWSLogs.Data))
 	data, err := event.AWSLogs.Parse()
 	if err != nil {
 		log.Error("processAll()", zap.Error(err))
