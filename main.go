@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -23,8 +24,9 @@ func main() {
 
 func handle(event events.CloudwatchLogsData) error {
 	println(event)
+	fmt.Printf("event: %v", event)
 	if err := processAll(event.LogGroup, event.LogStream, event.LogEvents); err != nil {
-		println(err)
+		fmt.Printf("error: %v", err.Error())
 		return err
 	}
 
