@@ -6,6 +6,7 @@ provider:
   region: us-east-1
   memorySize: 128
   stage: dev
+  logRetentionInDays: 7
   versionFunctions: false
   iamRoleStatements:
     - Effect: Allow
