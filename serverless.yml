@@ -1,34 +1,24 @@
 service: cloudwatch-logs
 
-plugins:
- - serverless-pseudo-parameters
- - serverless-iam-roles-per-function
-
 provider:
   name: aws
-  runtime: nodejs8.10
-  stage: dev
+  runtime: go1.x
   region: us-east-1
+  memorySize: 128
+  stage: dev
+  logRetentionInDays: 7
   versionFunctions: false
-  
-functions:
-  ship-logs-to-logzio:
-    handler: functions/ship-logs/handler.handler
-    description: Sends CloudWatch logs to Logz.io
-    memorySize: 128
-    environment:
-      logstash_host: listener.logz.io
-      logstash_port: 5015
-      token: rBrdvFgguTSCLHhFfLDmyuGTQZhDYyZt
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource: "*"
 
-resources:
-  Resources:
-    LambdaInvokePermission:
-      Type: AWS::Lambda::Permission
-      Properties:
-        Action: lambda:InvokeFunction
-        FunctionName:
-          Fn::Join:
-            - ""
-            - - "Ref" : "ShipDashlogsDashtoDashlogzioLambdaFunction"
-        Principal: logs.#{AWS::Region}.amazonaws.com
+functions:
+  worker:
+    handler: bin/worker
+    description: Sends CloudWatch logs to Logz.io
+    environment:
+      HOST: listener.logz.io
+      PORT: 8071
+      TOKEN: palOPqZOzEnDKhrVYZvgEmZzJqWRaVdp

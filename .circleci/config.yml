@@ -1,0 +1,73 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.14
+    working_directory: ~/go/src/github.com/astrocode-io/lambda-logging-shipping
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-dependencies-cache-{{ checksum "go.sum" }}
+            - go-dependencies-cache
+      - run:
+          name: Vendoring dependencies
+          command: go mod vendor
+      - run:
+          name: Build
+          command: env GOOS=linux go build -ldflags="-s -w" -o bin/worker ./main.go
+      - run: cp go.sum bin/go.sum
+      - persist_to_workspace:
+          root: bin
+          paths:
+            - worker
+            - go.sum
+      - save_cache:
+          paths:
+            - vendor
+          key: go-dependencies-cache-{{ checksum "go.sum" }}
+  deploy:
+    docker:
+      - image: circleci/node:12.18.3
+    working_directory: ~/go/src/github.com/astrocode-io/lambda-logging-shipping
+    steps:
+      - checkout
+      - attach_workspace:
+          at: bin
+      - restore_cache:
+          keys:
+            - dependencies-node-{{ checksum "go.sum" }}
+            - dependencies-node
+      - run:
+          name: Install Serverless CLI and dependencies
+          command: |
+            sudo npm i -g serverless
+            npm install --save-dev serverless-iam-roles-per-function
+            npm install --save-dev serverless-plugin-log-retention
+            npm install
+      - save_cache:
+          paths:
+            - node_modules
+          key: dependencies-node-{{ checksum "go.sum" }}
+      - run:
+          name: Configure credentials
+          command: sls config credentials --provider aws --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY} --region ${AWS_REGION}
+      - run:
+          name: Deploy application
+          command: |
+            serverless deploy
+
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build
+      - deploy:
+          filters:
+            branches:
+              only:
+                - master
+                - develop
+          requires:
+            - build
+          context: astrocode-io
